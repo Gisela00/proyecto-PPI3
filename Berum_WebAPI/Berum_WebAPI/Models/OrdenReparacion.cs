@@ -18,7 +18,7 @@ public partial class OrdenReparacion
 
     public int IdEquipo { get; set; }
 
-    public int IdTecnico { get; set; }
+    public int? IdTecnico { get; set; };
 
     public int IdEstadoActual { get; set; }
 
