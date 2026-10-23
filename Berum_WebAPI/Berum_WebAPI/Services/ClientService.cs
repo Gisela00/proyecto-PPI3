@@ -1,88 +1,101 @@
+using Amazon.DynamoDBv2.DataModel;
 using Berum_WebAPI.DTOs;
 using Berum_WebAPI.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Berum_WebAPI.Services
 {
     public class ClienteService : IClienteService
-{
-    private readonly ReparacionesDbContext _context;
+    {
+        private readonly IDynamoDBContext _dynamoDbContext;
 
-    public ClienteService(ReparacionesDbContext context)
-    {
-        _context = context;
-    }
-    public async Task<ClienteDTO?> GetById(int id)
-    {
-            return await _context.Clientes
-            .Where(e => e.IdCliente == id)
-            .Select(e => new ClienteDTO
+        public ClienteService(IDynamoDBContext dynamoDbContext)
+        {
+            _dynamoDbContext = dynamoDbContext;
+        }
+
+        public async Task<ClienteDTO?> GetById(int id)
+        {
+            var cliente = await _dynamoDbContext.LoadAsync<Cliente>(id);
+            if (cliente == null) return null;
+
+            return new ClienteDTO
             {
-                    IdCliente = e.IdCliente,
-                    Nombre = e.Nombre,
-                    Telefono = e.Telefono,
-                    Email = e.Email
-            })
-                .FirstOrDefaultAsync();
-    }
-    // Lógica: convertir DTO → Modelo → guardar
-    public async Task<ClienteDTO> Create(ClienteCreateDto dto)
-    {
-        // Validar
-        if (string.IsNullOrWhiteSpace(dto.Nombre))
-            throw new ArgumentException("El nombre es requerido");
+                IdCliente = cliente.IdCliente,
+                Nombre = cliente.Nombre,
+                Telefono = cliente.Telefono,
+                Email = cliente.Email
+            };
+        }
 
-        // Crear modelo
-        var cliente = new Cliente
+        public async Task<ClienteDTO> Create(ClienteCreateDto dto)
         {
-            Nombre = dto.Nombre.Trim(),
-            Email = dto.Email,
-            Telefono = dto.Telefono
-        };
+            // Validar
+            if (string.IsNullOrWhiteSpace(dto.Nombre))
+                throw new ArgumentException("El nombre es requerido");
 
-        _context.Clientes.Add(cliente);
-        await _context.SaveChangesAsync();
+            // DynamoDB no tiene auto-incremento nativo, creamos un ID único numérico basado en timestamp o aleatorio.
+            int generatedId = (int)(DateTime.UtcNow.Ticks % int.MaxValue);
 
-        // Retornar DTO
-        return new ClienteDTO
+            var cliente = new Cliente
+            {
+                IdCliente = generatedId,
+                Nombre = dto.Nombre.Trim(),
+                Email = dto.Email,
+                Telefono = dto.Telefono
+            };
+
+            await _dynamoDbContext.SaveAsync(cliente);
+
+            return new ClienteDTO
+            {
+                IdCliente = cliente.IdCliente,
+                Nombre = cliente.Nombre,
+                Email = cliente.Email,
+                Telefono = cliente.Telefono
+            };
+        }
+
+        public async Task<List<ClienteDTO>> GetAll()
         {
-            IdCliente = cliente.IdCliente,
-            Nombre = cliente.Nombre,
-            Email = cliente.Email,
-            Telefono = cliente.Telefono
-        };
-    }
+            var clientes = await _dynamoDbContext.ScanAsync<Cliente>(new List<ScanCondition>()).GetRemainingAsync();
 
-    public async Task<List<ClienteDTO>> GetAll()
-    {
-        return await _context.Clientes
-            .Select(c => new ClienteDTO
+            return clientes.Select(c => new ClienteDTO
             {
                 IdCliente = c.IdCliente,
                 Nombre = c.Nombre,
                 Email = c.Email,
                 Telefono = c.Telefono
-            })
-            .ToListAsync();
-    }
-    public async Task<ClienteDTO> Update(int id, ClienteDTO dto)
-    {
-        var cliente = await _context.Clientes.FindAsync(id);
-        if (cliente == null)
-        {
-            return null;
+            }).ToList();
         }
-        cliente.Nombre = dto.Nombre;
-        cliente.Email = dto.Email;
-        cliente.Telefono = dto.Telefono;
-        _context.Clientes.Update(cliente);
-        await _context.SaveChangesAsync();
-         return await GetById(id);
-    }
-        public Task<bool> Delete(int id)
+
+        public async Task<ClienteDTO?> Update(int id, ClienteDTO dto)
         {
-            throw new NotImplementedException();
+            var cliente = await _dynamoDbContext.LoadAsync<Cliente>(id);
+            if (cliente == null)
+            {
+                return null;
+            }
+
+            cliente.Nombre = dto.Nombre;
+            cliente.Email = dto.Email;
+            cliente.Telefono = dto.Telefono;
+
+            // sobrescribe el ítem existente si la clave de partición coincide
+            await _dynamoDbContext.SaveAsync(cliente);
+
+            return await GetById(id);
+        }
+
+        public async Task<bool> Delete(int id)
+        {
+            var cliente = await _dynamoDbContext.LoadAsync<Cliente>(id);
+            if (cliente == null)
+            {
+                return false;
+            }
+
+            await _dynamoDbContext.DeleteAsync(cliente);
+            return true;
         }
     }
 }
-

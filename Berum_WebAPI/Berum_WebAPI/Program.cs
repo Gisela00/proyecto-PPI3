@@ -8,10 +8,16 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
+using Berum_WebAPI.Services;
+
+
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddDbContext<ReparacionesDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("connectionDB"))
-);
+
+
+builder.Services.AddAWSService<IAmazonDynamoDB>();
+builder.Services.AddScoped<IDynamoDBContext, DynamoDBContext>();
 
 builder.Services.AddCors(options =>
 {
@@ -23,6 +29,7 @@ builder.Services.AddCors(options =>
               .AllowCredentials(); 
     });
 });
+
 // Add services to the container.
 QuestPDF.Settings.License = LicenseType.Community;
 builder.Services.AddScoped<PdfService>();
@@ -68,6 +75,7 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
+
 builder.Services.AddAuthorization();
 
 builder.Services.Configure<EmailSettings>(
