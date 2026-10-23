@@ -44,7 +44,7 @@ namespace Berum_WebAPI.Services
                 FechaIngreso = o.FechaIngreso,
                 IdCliente = o.IdCliente,
                 IdEquipo = o.IdEquipo,
-                IdTecnico = o.IdTecnico,
+                IdTecnico = o.IdTecnico ?? 0,
                 IdEstadoActual = o.IdEstadoActual,
                 IdTipoFalla = o.IdTipoFalla,
                 DescripcionFalla = o.DescripcionFalla
@@ -70,7 +70,7 @@ namespace Berum_WebAPI.Services
                 FechaIngreso = dto.FechaIngreso == default ? DateTime.UtcNow : dto.FechaIngreso,
                 IdCliente = dto.IdCliente,
                 IdEquipo = dto.IdEquipo,
-                IdTecnico = dto.IdTecnico,
+                IdTecnico = dto.IdTecnico ?? 0,
                 IdEstadoActual = dto.IdEstadoActual,
                 IdTipoFalla = dto.IdTipoFalla,
                 DescripcionFalla = dto.DescripcionFalla
