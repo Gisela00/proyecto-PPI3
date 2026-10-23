@@ -15,6 +15,7 @@ using Berum_WebAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
 
 builder.Services.AddAWSService<IAmazonDynamoDB>();
 builder.Services.AddScoped<IDynamoDBContext, DynamoDBContext>();
@@ -23,7 +24,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") 
+        policy.WithOrigins(allowedOrigins) 
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials(); 
@@ -82,8 +83,6 @@ builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailGmailSettings"));
 
 builder.Services.AddScoped<IEmailService, EmailService>();
-
-builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
