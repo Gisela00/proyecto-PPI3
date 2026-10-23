@@ -93,15 +93,13 @@ var app = builder.Build();
 app.UseCors("AllowReactApp");
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+
     app.MapOpenApi();
     app.MapScalarApiReference(
         options =>
         options.WithTitle(title: "RepairShop API")
         .WithTheme(ScalarTheme.Saturn)
         .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.Http));
-}
 
 //app.UseHttpsRedirection();
 
