@@ -25,7 +25,7 @@ namespace Berum_WebAPI.Services
                 FechaIngreso = o.FechaIngreso,
                 IdCliente = o.IdCliente,
                 IdEquipo = o.IdEquipo,
-                IdTecnico = o.IdTecnico,
+                IdTecnico = o.IdTecnico ?? 0,
                 IdEstadoActual = o.IdEstadoActual,
                 IdTipoFalla = o.IdTipoFalla,
                 DescripcionFalla = o.DescripcionFalla
