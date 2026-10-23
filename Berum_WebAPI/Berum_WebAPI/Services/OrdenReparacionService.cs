@@ -70,7 +70,7 @@ namespace Berum_WebAPI.Services
                 FechaIngreso = dto.FechaIngreso == default ? DateTime.UtcNow : dto.FechaIngreso,
                 IdCliente = dto.IdCliente,
                 IdEquipo = dto.IdEquipo,
-                IdTecnico = dto.IdTecnico ?? 0,
+                IdTecnico = dto.IdTecnico,
                 IdEstadoActual = dto.IdEstadoActual,
                 IdTipoFalla = dto.IdTipoFalla,
                 DescripcionFalla = dto.DescripcionFalla
