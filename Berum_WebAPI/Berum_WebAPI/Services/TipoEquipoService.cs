@@ -1,37 +1,39 @@
-﻿using Berum_WebAPI.DTOs;
+﻿using Amazon.DynamoDBv2.DataModel;
 using Berum_WebAPI.DTOs;
 using Berum_WebAPI.Models;
-using Microsoft.EntityFrameworkCore;
+
 namespace Berum_WebAPI.Services
 {
     public class TipoEquipoService : ITipoEquipoService
     {
-        private readonly ReparacionesDbContext _context;
+        private readonly IDynamoDBContext _dynamoDbContext;
         
-        public TipoEquipoService(ReparacionesDbContext context)
+        public TipoEquipoService(IDynamoDBContext dynamoDbContext)
         {
-            _context = context;
+            _dynamoDbContext = dynamoDbContext;
         }
+
         public async Task<IEnumerable<TipoEquipoDto>> GetAll()
         {
-            return await _context.TipoEquipos
-                .Select(te => new TipoEquipoDto
-                {
-                    IdTipoEquipo = te.IdTipoEquipo,
-                    Nombre = te.Nombre
-                })
-                .ToListAsync();
+            var tipos = await _dynamoDbContext.ScanAsync<TipoEquipo>(new List<ScanCondition>()).GetRemainingAsync();
+
+            return tipos.Select(te => new TipoEquipoDto
+            {
+                IdTipoEquipo = te.IdTipoEquipo,
+                Nombre = te.Nombre
+            });
         }
 
         public async Task<TipoEquipoDto?> GetById(int id)
         {
-            return await _context.TipoEquipos
-                .Where(te => te.IdTipoEquipo == id)
-                .Select(te => new TipoEquipoDto
-                {
-                    IdTipoEquipo = te.IdTipoEquipo,
-                    Nombre = te.Nombre
-                }).FirstOrDefaultAsync();
+            var te = await _dynamoDbContext.LoadAsync<TipoEquipo>(id);
+            if (te == null) return null;
+
+            return new TipoEquipoDto
+            {
+                IdTipoEquipo = te.IdTipoEquipo,
+                Nombre = te.Nombre
+            };
         }
     }
 }

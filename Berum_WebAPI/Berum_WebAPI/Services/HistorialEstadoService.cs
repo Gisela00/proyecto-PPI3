@@ -1,6 +1,7 @@
-﻿using Berum_WebAPI.DTOs;
+﻿using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
+using Berum_WebAPI.DTOs;
 using Berum_WebAPI.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Berum_WebAPI.Services
 {
@@ -14,52 +15,51 @@ namespace Berum_WebAPI.Services
 
     public class HistorialEstadoService : IHistorialEstadoService
     {
-        private readonly ReparacionesDbContext _context;
+        private readonly IDynamoDBContext _dynamoDbContext;
 
-        public HistorialEstadoService(ReparacionesDbContext context)
+        public HistorialEstadoService(IDynamoDBContext dynamoDbContext)
         {
-            _context = context;
+            _dynamoDbContext = dynamoDbContext;
         }
 
         public async Task<(CreateHistorialResult Result, HistorialEstadoDto? Data)> Create(HistorialEstadoCreateDTO dto)
         {
-            var ordenExiste = await _context.OrdenReparacions
-                .AnyAsync(o => o.IdOrden == dto.IdOrden);
-
-            if (!ordenExiste)
+            var orden = await _dynamoDbContext.LoadAsync<OrdenReparacion>(dto.IdOrden);
+            if (orden == null)
                 return (CreateHistorialResult.OrdenNoExiste, null);
 
-            var estadoExiste = await _context.Estados
-                .AnyAsync(e => e.IdEstado == dto.IdEstado);
-
-            if (!estadoExiste)
+            var estado = await _dynamoDbContext.LoadAsync<Estado>(dto.IdEstado);
+            if (estado == null)
                 return (CreateHistorialResult.EstadoNoExiste, null);
 
-            var ultimoEstado = await _context.HistorialEstados
-                .Where(h => h.IdOrden == dto.IdOrden)
-                .OrderByDescending(h => h.Fecha)
-                .FirstOrDefaultAsync();
-           
+            
+            var conditions = new List<ScanCondition>
+            {
+                new ScanCondition("IdOrden", ScanOperator.Equal, dto.IdOrden)
+            };
+            var historialRows = await _dynamoDbContext.ScanAsync<HistorialEstado>(conditions).GetRemainingAsync();
+            var ultimoEstado = historialRows.OrderByDescending(h => h.Fecha).FirstOrDefault();
+         
             if (ultimoEstado != null && ultimoEstado.IdEstado == dto.IdEstado && ultimoEstado.Observaciones == dto.Observaciones)
                 return (CreateHistorialResult.Duplicado, null);
 
+            
+            int generatedId = (int)(DateTime.UtcNow.Ticks % int.MaxValue);
+
             var historialEstado = new HistorialEstado
             {
+                IdHistorial = generatedId,
                 IdOrden = dto.IdOrden,
                 IdEstado = dto.IdEstado,
                 Fecha = DateTime.UtcNow,
                 Observaciones = dto.Observaciones
             };
 
-            _context.HistorialEstados.Add(historialEstado);
+            
+            await _dynamoDbContext.SaveAsync(historialEstado);
 
-            var orden = await _context.OrdenReparacions.FindAsync(dto.IdOrden);
-            if (orden != null)
-            {
-                orden.IdEstadoActual = dto.IdEstado;
-            }
-
-            await _context.SaveChangesAsync();
+            orden.IdEstadoActual = dto.IdEstado;
+            await _dynamoDbContext.SaveAsync(orden);
 
             return (CreateHistorialResult.Success, new HistorialEstadoDto
             {
@@ -73,45 +73,45 @@ namespace Berum_WebAPI.Services
 
         public async Task<bool> Update(int id, HistorialEstadoUpdateDTO dto)
         {
-            var historialEstado = await _context.HistorialEstados.FindAsync(id);
+            var historialEstado = await _dynamoDbContext.LoadAsync<HistorialEstado>(id);
 
             if (historialEstado == null)
                 return false;
 
             historialEstado.Observaciones = dto.Observaciones;
 
-            await _context.SaveChangesAsync();
+            await _dynamoDbContext.SaveAsync(historialEstado);
 
             return true;
         }
 
         public async Task<IEnumerable<HistorialEstadoDto>> GetAll()
         {
-            return await _context.HistorialEstados
-                .Select(h => new HistorialEstadoDto
-                {
-                    IdHistorial = h.IdHistorial,
-                    IdOrden = h.IdOrden,
-                    IdEstado = h.IdEstado,
-                    Fecha = h.Fecha,
-                    Observaciones = h.Observaciones
-                })
-                .ToListAsync();
+            var historiales = await _dynamoDbContext.ScanAsync<HistorialEstado>(new List<ScanCondition>()).GetRemainingAsync();
+
+            return historiales.Select(h => new HistorialEstadoDto
+            {
+                IdHistorial = h.IdHistorial,
+                IdOrden = h.IdOrden,
+                IdEstado = h.IdEstado,
+                Fecha = h.Fecha,
+                Observaciones = h.Observaciones
+            });
         }
 
         public async Task<HistorialEstadoDto?> GetById(int id)
         {
-            return await _context.HistorialEstados
-                .Where(h => h.IdHistorial == id)
-                .Select(h => new HistorialEstadoDto
-                {
-                    IdHistorial = h.IdHistorial,
-                    IdOrden = h.IdOrden,
-                    IdEstado = h.IdEstado,
-                    Fecha = h.Fecha,
-                    Observaciones = h.Observaciones
-                })
-                .FirstOrDefaultAsync();
+            var h = await _dynamoDbContext.LoadAsync<HistorialEstado>(id);
+            if (h == null) return null;
+
+            return new HistorialEstadoDto
+            {
+                IdHistorial = h.IdHistorial,
+                IdOrden = h.IdOrden,
+                IdEstado = h.IdEstado,
+                Fecha = h.Fecha,
+                Observaciones = h.Observaciones
+            };
         }
     }
 }

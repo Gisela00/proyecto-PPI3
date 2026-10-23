@@ -1,36 +1,39 @@
-﻿using Berum_WebAPI.DTOs;
+﻿using Amazon.DynamoDBv2.DataModel;
+using Berum_WebAPI.DTOs;
 using Berum_WebAPI.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Berum_WebAPI.Services
 {
     public class TipoFallaService : ITipoFallaService
     {
-        private readonly ReparacionesDbContext _context;
+        private readonly IDynamoDBContext _dynamoDbContext;
 
-        public TipoFallaService(ReparacionesDbContext context)
+        public TipoFallaService(IDynamoDBContext dynamoDbContext)
         {
-            _context = context;
+            _dynamoDbContext = dynamoDbContext;
         }
+
         public async Task<IEnumerable<TipoFallaDto>> GetAll()
         {
-            return await _context.TipoFallas
-                .Select(t => new TipoFallaDto
-                {
-                    IdTipoFalla = t.IdTipoFalla,
-                    Nombre = t.Nombre
-                }).ToListAsync();
+            var tipos = await _dynamoDbContext.ScanAsync<TipoFalla>(new List<ScanCondition>()).GetRemainingAsync();
+
+            return tipos.Select(t => new TipoFallaDto
+            {
+                IdTipoFalla = t.IdTipoFalla,
+                Nombre = t.Nombre
+            });
         }
 
         public async Task<TipoFallaDto?> GetById(int id)
         {
-            return await _context.TipoFallas
-                .Where(t => t.IdTipoFalla == id)
-                .Select(t => new TipoFallaDto
-                {
-                    IdTipoFalla = t.IdTipoFalla,
-                    Nombre = t.Nombre
-                }).FirstOrDefaultAsync();
+            var t = await _dynamoDbContext.LoadAsync<TipoFalla>(id);
+            if (t == null) return null;
+
+            return new TipoFallaDto
+            {
+                IdTipoFalla = t.IdTipoFalla,
+                Nombre = t.Nombre
+            };
         }
     }
 }

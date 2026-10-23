@@ -1,36 +1,39 @@
-﻿using Berum_WebAPI.DTOs;
+﻿using Amazon.DynamoDBv2.DataModel;
+using Berum_WebAPI.DTOs;
 using Berum_WebAPI.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata.Ecma335;
+
 namespace Berum_WebAPI.Services
 {
     public class EstadoService : IEstadoService
     {
-        private readonly ReparacionesDbContext _context;
+        private readonly IDynamoDBContext _dynamoDbContext;
 
-        public EstadoService(ReparacionesDbContext context)
+        public EstadoService(IDynamoDBContext dynamoDbContext)
         {
-            _context = context;
+            _dynamoDbContext = dynamoDbContext;
         }
+
         public async Task<IEnumerable<EstadoDto>> GetAll()
         {
-            return await _context.Estados.Select(e => new EstadoDto
+            var estados = await _dynamoDbContext.ScanAsync<Estado>(new List<ScanCondition>()).GetRemainingAsync();
+
+            return estados.Select(e => new EstadoDto
             {
                 IdEstado = e.IdEstado,
                 Nombre = e.Nombre
-            }).ToListAsync();
+            });
         }
 
         public async Task<EstadoDto?> GetById(int id)
         {
-            return await _context.Estados
-                .Where(e => e.IdEstado == id)
-                .Select(e => new EstadoDto 
-                {
-                    IdEstado = e.IdEstado,
-                    Nombre = e.Nombre
-                
-                }).FirstOrDefaultAsync();
+            var e = await _dynamoDbContext.LoadAsync<Estado>(id);
+            if (e == null) return null;
+
+            return new EstadoDto 
+            {
+                IdEstado = e.IdEstado,
+                Nombre = e.Nombre
+            };
         }
     }
 }
