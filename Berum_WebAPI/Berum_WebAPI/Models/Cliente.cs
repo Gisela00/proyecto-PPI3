@@ -4,7 +4,7 @@ using Amazon.DynamoDBv2.DataModel;
 
 namespace Berum_WebAPI.Models;
 
-[DynamoDBTable("")] // Nombre de la tabla en DynamoDB
+[DynamoDBTable("Clientes")]
 public partial class Cliente
 {
     [DynamoDBHashKey]
