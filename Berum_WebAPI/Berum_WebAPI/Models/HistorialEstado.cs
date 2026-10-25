@@ -11,10 +11,12 @@ public partial class HistorialEstado
     [DynamoDBHashKey]
     public int IdHistorial { get; set; }
 
+    [DynamoDBGlobalSecondaryIndexHashKey("IdOrden-Fecha-index")]
     public int IdOrden { get; set; }
 
     public int IdEstado { get; set; }
 
+    [DynamoDBGlobalSecondaryIndexRangeKey("IdOrden-Fecha-index")]
     public DateTime Fecha { get; set; }
 
     public string? Observaciones { get; set; }

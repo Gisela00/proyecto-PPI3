@@ -10,6 +10,7 @@ public partial class OrdenReparacion
     [DynamoDBHashKey]
     public int IdOrden { get; set; }
 
+    [DynamoDBGlobalSecondaryIndexHashKey("NumeroServicio-index")]
     public string NumeroServicio { get; set; } = null!;
 
     public DateTime FechaIngreso { get; set; }
