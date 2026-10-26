@@ -1,203 +1,53 @@
-# Berum Web API + Frontend
+<div align="center">
+  <h1 align="center">Gestión de Servicio Técnico</h1>
 
-Proyecto fullstack compuesto por una API REST en **.NET 10.0** con **SQL Server** como base de datos (alojada en la nube), y un frontend en **React**.
+  <p align="center">
+       <img src="https://img.shields.io/badge/React-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB" alt="React" />
+       <img src="https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET" />
+       <img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+       <img src="https://img.shields.io/badge/AWS%20Amplify-FF9900?style=for-the-badge&logo=aws-amplify&logoColor=white" alt="AWS Amplify" />
+       <img src="https://img.shields.io/badge/Amazon%20EC2-FF9900?style=for-the-badge&logo=amazonec2&logoColor=white" alt="Amazon EC2" />
+       <img src="https://img.shields.io/badge/Amazon%20DynamoDB-4053B8?style=for-the-badge&logo=amazondynamodb&logoColor=white" alt="Amazon DynamoDB" />
+       <img src="https://img.shields.io/badge/AWS%20Lambda-FF9900?style=for-the-badge&logo=awslambda&logoColor=white" alt="AWS Lambda" />
+  </p>
+</div>
 
----
+<p>
+  Sistema web integral para la digitalización, seguimiento y trazabilidad de reparaciones informáticas, diseñado para optimizar el flujo operativo y automatizar la     comunicación con los clientes.
+</p>
 
-# Gestión de Servicio Técnico
+## 1. Arquitectura de la Solución
 
-Sistema web integral para la digitalización y seguimiento de reparaciones informáticas. Diseñado para eliminar el desorden de las anotaciones informales y automatizar la comunicación con el cliente.
+<p>
+    El sistema implementa una arquitectura desacoplada basada en servicios administrados de AWS y contenedores, estructurada en tres capas principales:
+</p>
 
-### El Problema
-Los procesos manuales y la falta de trazabilidad generan cuellos de botella operativos y una comunicación deficiente (consultas constantes vía WhatsApp/llamadas) sobre el estado de los equipos.
+* Capa de Presentación: Aplicación web desarrollada en React y alojada en Amazon Amplify, con integración continua (CI/CD) desde el repositorio de código.
+* Capa de Lógica de Negocio: API REST desarrollada en .NET (C#) y ejecutada dentro de un contenedor Docker sobre una instancia Ubuntu en Amazon EC2. La infraestructura de red utiliza una IP Elástica para garantizar una ruta de comunicación persistente con el frontend.
+* Capa de Persistencia: Base de datos NoSQL Amazon DynamoDB, integrada mediante roles IAM asociados a la instancia EC2.
 
-### Solución y Funcionalidades
-* **Gestión de Órdenes:** Registro de ingreso, diagnóstico, reparación y entrega.
-* **Tracking Público:** Portal de consulta para clientes mediante **código único**.
-* **Historial de Trabajo:** Trazabilidad completa de intervenciones por equipo.
-* **Escalabilidad:** Arquitectura preparada para gestión de stock y tarifarios.
+### Flujo de Datos y Operación
 
-### Stack Tecnológico
-* **Frontend:** React
-* **Backend:** .NET (C#)
-* **Base de Datos:** SQL Server
+* Presentación: El usuario interactúa con la interfaz web alojada en Amazon Amplify.
+* Enrutamiento: Las peticiones HTTP se dirigen a través del Internet Gateway hacia la instancia EC2 utilizando la IP Elástica configurada.
+* Procesamiento: Las solicitudes son procesadas por la API .NET ejecutándose en un contenedor Docker en modo Release.
+* Persistencia: La API se comunica con Amazon DynamoDB mediante credenciales temporales basadas en roles IAM.
+* Optimización Operativa: Una función de AWS Lambda automatiza el ciclo de vida (encendido y apagado) de la instancia EC2 para la gestión de recursos.
 
-## 📋 Requisitos previos
+## 2. Componentes de la Infraestructura
 
-Antes de levantar el proyecto, asegurate de tener instalado lo siguiente:
+| Capa | Servicio AWS | Implementación y Justificación |
+| :--- | :--- | :--- |
+| **Presentación** | **Amazon Amplify** | Alojamiento serverless de la SPA en React, garantizando alta disponibilidad sin gestión de servidores web. |
+| **Cómputo / API** | **Amazon EC2 + Docker** | Servidor virtual Ubuntu ejecutando la API .NET containerizada para garantizar portabilidad local/nube y control del entorno. |
+| **Redes y Seguridad** | **Elastic IP & Security Groups** | IP fija permanente para el frontend y reglas de firewall estrictas (apertura exclusiva de SSH y puerto 8080). |
+| **Acceso a Datos** | **AWS IAM Roles** | Autenticación nativa basada en roles para autorizar las operaciones del SDK de DynamoDB (`AWSSDK.DynamoDBv2`). |
+| **Base de Datos** | **Amazon DynamoDB** | Persistencia NoSQL clave-valor administrada para almacenar órdenes, clientes y técnicos con consultas de ultra baja latencia. |
+| **Automatización** | **AWS Lambda** | Script serverless administrativo para la gestión del ciclo de vida de la instancia EC2 y control presupuestario. |
 
-| Herramienta | Versión recomendada | Descarga |
-|---|---|---|
-| .NET SDK | 10.0 o superior | https://dotnet.microsoft.com/download |
-| Node.js | 18.x o superior | https://nodejs.org |
-| Visual Studio Code | Última versión | https://code.visualstudio.com |
-| Git | Última versión | https://git-scm.com |
+## 3. Funcionalidades del Sistema
 
-> ℹ️ **No es necesario instalar SQL Server localmente.** La base de datos está alojada en la nube en **Somee.com** y se accede mediante la cadena de conexión.
-
-### Extensiones recomendadas de VS Code
-
-- **C# Dev Kit** (ms-dotnettools.csdevkit)
-- **ES7+ React/Redux/React-Native snippets**
-- **Prettier - Code formatter**
-
----
-
-## 📁 Estructura del proyecto
-
-```
-/
-├── Berum_WebAPI/          # Backend - API REST en .NET 10.0
-│   ├── Controllers/
-│   ├── DTOs/
-│   ├── Models/
-│   ├── Services/
-│   ├── appsettings.json
-│   └── Program.cs
-│
-└── berum-front/           # Frontend - React
-    ├── src/
-    │   ├── assets/
-    │   ├── componentes/
-    │   ├── context/
-    │   ├── features/
-    │   ├── router/
-    │   └── types/
-    ├── public/
-    └── package.json
-```
-
----
-
-## ⚙️ Configuración del Backend (`Berum_WebAPI`)
-
-### 1. Clonar el repositorio
-
-```bash
-git clone <URL_DEL_REPOSITORIO>
-cd <NOMBRE_DEL_REPOSITORIO>
-```
-
-### 2. Configurar la cadena de conexión
-
-La base de datos está alojada en la nube en **Somee.com** (SQL Server). No es necesario instalar ni configurar SQL Server localmente.
-
-Abrí el archivo `Berum_WebAPI/appsettings.json` y reemplazá la sección `ConnectionStrings` con las credenciales del proyecto:
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "workstation id=NOMBRE_BD.mssql.somee.com;packet size=4096;user id=USUARIO;pwd=CONTRASEÑA;data source=NOMBRE_BD.mssql.somee.com;persist security info=False;initial catalog=NOMBRE_BD;TrustServerCertificate=True;"
-  }
-}
-```
-
-> ⚠️ Reemplazá `NOMBRE_BD`, `USUARIO` y `CONTRASEÑA` con las credenciales reales. Estos datos los provee el equipo de desarrollo y **no deben subirse al repositorio**.
-
-### 3. Aplicar las migraciones con Entity Framework Core
-
-El proyecto usa **Entity Framework Core** para gestionar el esquema de la base de datos. Una vez configurada la connection string, ejecutá desde la carpeta `Berum_WebAPI/`:
-
-```bash
-cd Berum_WebAPI
-dotnet ef database update
-```
-
-Esto aplicará todas las migraciones existentes sobre la base de datos remota en Somee.
-
-> Si `dotnet ef` no está instalado, ejecutá primero:
-> ```bash
-> dotnet tool install --global dotnet-ef
-> ```
-
-### 4. Restaurar dependencias y ejecutar el backend
-
-```bash
-dotnet restore
-dotnet run --launch-profile https
-```
-
-La API estará disponible en `https://localhost:5001` (o el puerto que indique la consola).
-
----
-
-## 🌐 Configuración del Frontend (`berum-front`)
-
-### 1. Instalar dependencias
-
-```bash
-cd berum-front
-npm install
-```
-
-### 2. Configurar la URL de la API
-
-Creá un archivo `.env` en la raíz de `berum-front/` con el siguiente contenido:
-
-```env
-REACT_APP_API_URL=https://localhost:5001
-```
-
-> Ajustá el puerto según el que use tu backend al iniciarse.
-
-### 3. Ejecutar el frontend
-
-```bash
-npm start -- --https
-```
-
-La aplicación estará disponible en `https://localhost:3000`.
-
----
-
-## ▶️ Levantar el proyecto completo
-
-Para tener el entorno completo funcionando, necesitás tener **dos terminales abiertas en paralelo**, ambas ejecutando el perfil **HTTPS**:
-
-**Terminal 1 — Backend:**
-```bash
-cd Berum_WebAPI
-dotnet run --launch-profile https
-```
-
-**Terminal 2 — Frontend:**
-```bash
-cd berum-front
-npm start -- --https
-```
-
-> Ambos proyectos deben estar corriendo al mismo tiempo para que la aplicación funcione correctamente.
-
----
-
-## 🗃️ Base de datos
-
-- Motor: **SQL Server**
-- Hosting: **Somee.com** (acceso remoto, no requiere instalación local)
-- Las migraciones se gestionan con **Entity Framework Core**
-- Para crear una nueva migración (solo en desarrollo):
-
-```bash
-cd Berum_WebAPI
-dotnet ef migrations add NombreDeLaMigracion
-dotnet ef database update
-```
-
----
-
-## ❓ Problemas frecuentes
-
-**Error de certificado SSL al conectar con Somee**
-→ Asegurate de tener `TrustServerCertificate=True` en la cadena de conexión.
-
-**`dotnet ef` no se reconoce como comando**
-→ Instalalo con: `dotnet tool install --global dotnet-ef` y reiniciá la terminal.
-
-**Puerto 5001 o 3000 ya en uso**
-→ Cambiá el puerto en `Properties/launchSettings.json` (backend) o usá `PORT=3001 npm start` (frontend).
-
-**Error de CORS en el frontend**
-→ Verificá que la URL configurada en `.env` coincida exactamente con la que usa el backend.
-
-**No se puede conectar a la base de datos**
-→ Verificá que las credenciales en `appsettings.json` sean correctas y que tu conexión a internet esté activa.
+* Gestión de Órdenes: Registro y seguimiento del ciclo de vida del equipo (ingreso, diagnóstico, reparación y entrega).
+* Tracking Público: Módulo de consulta para clientes mediante un código de seguimiento único, sin requerir autenticación.
+* Historial Técnico: Trazabilidad completa de intervenciones pasadas asociadas a cada equipo.
+* Escalabilidad: Estructura preparada para la futura integración de módulos de stock y tarifarios.
