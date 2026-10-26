@@ -1,5 +1,5 @@
 <div align="center">
-  <h1 align="center">Gestión de Servicio Técnico</h1>
+  <h1 align="center">Berum: Gestión de Servicio Técnico</h1>
 
   <p align="center">
        <img src="https://img.shields.io/badge/React-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB" alt="React" />
