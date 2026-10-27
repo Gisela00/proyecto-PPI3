@@ -23,14 +23,15 @@
 </p>
 
 * Capa de Presentación: Aplicación web desarrollada en React y alojada en Amazon Amplify, con integración continua (CI/CD) desde el repositorio de código.
-* Capa de Lógica de Negocio: API REST desarrollada en .NET (C#) y ejecutada dentro de un contenedor Docker sobre una instancia Ubuntu en Amazon EC2. La infraestructura de red utiliza una IP Elástica para garantizar una ruta de comunicación persistente con el frontend.
+* Capa de Lógica de Negocio: API REST desarrollada en .NET (C#) empaquetada como imagen Docker, almacenada en Amazon ECR y ejecutada dentro de un contenedor en una instancia Ubuntu sobre Amazon EC2. La infraestructura de red utiliza una IP Elástica para garantizar una ruta de comunicación persistente con el frontend.
 * Capa de Persistencia: Base de datos NoSQL Amazon DynamoDB, integrada mediante roles IAM asociados a la instancia EC2.
 
 ### Flujo de Datos y Operación
-
 * Presentación: El usuario interactúa con la interfaz web alojada en Amazon Amplify.
+* Contenedorización y Registro: La imagen de la API .NET se compila y se almacena de forma segura en un repositorio privado de Amazon ECR.
+* Despliegue: La instancia EC2 se autentica contra ECR mediante roles IAM, descarga (pull) la imagen del contenedor más reciente y la ejecuta en modo Release.
 * Enrutamiento: Las peticiones HTTP se dirigen a través del Internet Gateway hacia la instancia EC2 utilizando la IP Elástica configurada.
-* Procesamiento: Las solicitudes son procesadas por la API .NET ejecutándose en un contenedor Docker en modo Release.
+* Procesamiento: Las solicitudes son procesadas por la API .NET ejecutándose dentro del contenedor Docker en el puerto asignado.
 * Persistencia: La API se comunica con Amazon DynamoDB mediante credenciales temporales basadas en roles IAM.
 * Optimización Operativa: Una función de AWS Lambda automatiza el ciclo de vida (encendido y apagado) de la instancia EC2 para la gestión de recursos.
 
@@ -39,11 +40,12 @@
 | Capa | Servicio AWS | Implementación y Justificación |
 | :--- | :--- | :--- |
 | **Presentación** | **Amazon Amplify** | Alojamiento serverless de la SPA en React, garantizando alta disponibilidad sin gestión de servidores web. |
+| **Registro de Contenedores** | **Amazon ECR** | Repositorio privado de imágenes Docker totalmente administrado, que asegura el versionado, la seguridad y la disponibilidad de los binarios de la API. |
 | **Cómputo / API** | **Amazon EC2 + Docker** | Servidor virtual Ubuntu ejecutando la API .NET containerizada para garantizar portabilidad local/nube y control del entorno. |
 | **Redes y Seguridad** | **Elastic IP & Security Groups** | IP fija permanente para el frontend y reglas de firewall estrictas (apertura exclusiva de SSH y puerto 8080). |
-| **Acceso a Datos** | **AWS IAM Roles** | Autenticación nativa basada en roles para autorizar las operaciones del SDK de DynamoDB (`AWSSDK.DynamoDBv2`). |
+| **Acceso y Permisos** | **AWS IAM Roles** | Autenticación nativa basada en roles para autorizar tanto el consumo del SDK de DynamoDB como la descarga de imágenes desde Amazon ECR. |
 | **Base de Datos** | **Amazon DynamoDB** | Persistencia NoSQL clave-valor administrada para almacenar órdenes, clientes y técnicos con consultas de ultra baja latencia. |
-| **Automatización** | **AWS Lambda** | Script serverless administrativo para la gestión del ciclo de vida de la instancia EC2 y control presupuestario. |
+| **Automatización** | **AWS Lambda** | Función administrativa y programada exclusivamente para automatizar el encendido y apagado de la instancia EC2 (control presupuestario). |
 
 ## 3. Funcionalidades del Sistema
 
