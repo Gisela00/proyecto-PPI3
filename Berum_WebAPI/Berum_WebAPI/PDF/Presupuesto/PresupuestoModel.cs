@@ -13,7 +13,7 @@ namespace Berum_WebAPI.PDF.Presupuesto
     {
         public int IdPresupuesto { get; set; }
         public int IdOrden { get; set; }
-        public string NumeroServicio { get; set; }
+        public string NumeroServicio { get; set; } = string.Empty;
         public DateTime FechaEmision { get; set; }
         public DateTime FechaVencimiento => FechaEmision.AddDays(10);
         public decimal Monto { get; set; }

@@ -10,7 +10,7 @@ namespace Berum_WebAPI.DTOs
         public int IdTecnico {get; set; }
         public int IdEstadoActual {get; set; }
         public int? IdTipoFalla {get; set; }
-        public string DescripcionFalla {get; set; }
+        public string DescripcionFalla {get; set; } = string.Empty;
     
     }
 }
