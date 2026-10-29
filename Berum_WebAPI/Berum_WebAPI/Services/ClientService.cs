@@ -29,11 +29,9 @@ namespace Berum_WebAPI.Services
 
         public async Task<ClienteDTO> Create(ClienteCreateDto dto)
         {
-            // Validar
             if (string.IsNullOrWhiteSpace(dto.Nombre))
                 throw new ArgumentException("El nombre es requerido");
 
-            // DynamoDB no tiene auto-incremento nativo, creamos un ID único numérico basado en timestamp o aleatorio.
             int generatedId = (int)(DateTime.UtcNow.Ticks % int.MaxValue);
 
             var cliente = new Cliente
@@ -80,7 +78,6 @@ namespace Berum_WebAPI.Services
             cliente.Email = dto.Email;
             cliente.Telefono = dto.Telefono;
 
-            // sobrescribe el ítem existente si la clave de partición coincide
             await _dynamoDbContext.SaveAsync(cliente);
 
             return await GetById(id);

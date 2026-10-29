@@ -18,40 +18,30 @@ namespace Berum_WebAPI.Services
 
         public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto request)
         {
-        
+            Usuario? usuario = null;
+
             var porUsuario = await _dynamoContext
                 .QueryAsync<Usuario>(request.Usuario, new QueryConfig { IndexName = "Usuario1-index" })
                 .GetRemainingAsync();
 
-            Usuario? usuario = porUsuario.FirstOrDefault(u => u.Activo);
+            usuario = porUsuario.FirstOrDefault(u => u.Activo);
 
             if (usuario == null)
             {
-                var conditions = new List<ScanCondition>
-                {
-                    new ScanCondition("Activo", ScanOperator.Equal, true)
-                };
+                var porEmail = await _dynamoContext
+                    .QueryAsync<Usuario>(request.Usuario, new QueryConfig { IndexName = "Email-index" })
+                    .GetRemainingAsync();
 
-                var usuarios = await _dynamoContext.ScanAsync<Usuario>(conditions).GetRemainingAsync();
-
-                foreach (var u in usuarios.Where(u => u.IdTecnico.HasValue))
-                {
-                    var tecnico = await _dynamoContext.LoadAsync<Tecnico>(u.IdTecnico!.Value);
-                    if (tecnico != null && tecnico.Email == request.Usuario)
-                    {
-                        u.IdTecnicoNavigation = tecnico;
-                        usuario = u;
-                        break;
-                    }
-                }
-            }
-            else if (usuario.IdTecnico.HasValue)
-            {
-                usuario.IdTecnicoNavigation = await _dynamoContext.LoadAsync<Tecnico>(usuario.IdTecnico.Value);
+                usuario = porEmail.FirstOrDefault(u => u.Activo);
             }
 
             if (usuario == null)
                 return null;
+
+            if (usuario.IdTecnico.HasValue)
+            {
+                usuario.IdTecnicoNavigation = await _dynamoContext.LoadAsync<Tecnico>(usuario.IdTecnico.Value);
+            }
 
             bool passwordValida = BCrypt.Net.BCrypt.Verify(
                 request.Password,
