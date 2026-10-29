@@ -26,7 +26,7 @@
 * Capa de Lógica de Negocio: API REST desarrollada en .NET (C#) empaquetada como imagen Docker, almacenada en Amazon ECR y ejecutada dentro de un contenedor en una instancia Ubuntu sobre Amazon EC2. La infraestructura de red utiliza una IP Elástica para garantizar una ruta de comunicación persistente con el frontend.
 * Capa de Persistencia: Base de datos NoSQL Amazon DynamoDB, integrada mediante roles IAM asociados a la instancia EC2.
 
-### Flujo de Datos y Operación
+## Flujo de Datos y Operación
 * Presentación: El usuario interactúa con la interfaz web alojada en Amazon Amplify.
 * Contenedorización y Registro: La imagen de la API .NET se compila y se almacena de forma segura en un repositorio privado de Amazon ECR.
 * Despliegue: La instancia EC2 se autentica contra ECR mediante roles IAM, descarga (pull) la imagen del contenedor más reciente y la ejecuta en modo Release.
