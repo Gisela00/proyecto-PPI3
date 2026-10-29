@@ -1,4 +1,6 @@
-﻿using Amazon.DynamoDBv2.DataModel;
+﻿using System;
+using System.Collections.Generic;
+using Amazon.DynamoDBv2.DataModel;
 
 namespace Berum_WebAPI.Models;
 
@@ -8,6 +10,7 @@ public partial class Usuario
     [DynamoDBHashKey]
     public int IdUsuario { get; set; }
 
+    [DynamoDBGlobalSecondaryIndexHashKey("Usuario1-index")]
     public string Usuario1 { get; set; } = null!;
 
     public string PasswordHash { get; set; } = null!;

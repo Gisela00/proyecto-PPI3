@@ -59,7 +59,6 @@ namespace Berum_WebAPI.Services
             if (dto.IdCliente <= 0 || dto.IdEquipo <= 0 || dto.IdEstadoActual <= 0)
                 throw new ArgumentException("Los datos de Cliente, Equipo y Estado son obligatorios y deben ser válidos.");
 
-            
             int generatedId = (int)(DateTime.UtcNow.Ticks % int.MaxValue);
             string numeroServicio = $"ORD-{DateTime.Today:yyyy}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
 
@@ -78,7 +77,6 @@ namespace Berum_WebAPI.Services
 
             await _dynamoDbContext.SaveAsync(orden);
 
-        
             int historyId = (int)(DateTime.UtcNow.Ticks % int.MaxValue);
             var historialInicial = new HistorialEstado
             {
@@ -100,7 +98,6 @@ namespace Berum_WebAPI.Services
             var orden = await _dynamoDbContext.LoadAsync<OrdenReparacion>(id);
             if (orden == null) return null;
 
-        
             if (orden.IdEstadoActual != dto.IdEstadoActual)
             {
                 int historyId = (int)(DateTime.UtcNow.Ticks % int.MaxValue);
@@ -140,17 +137,13 @@ namespace Berum_WebAPI.Services
        
         public async Task<OrdenSeguimientoDTO?> GetByCodigo(string codigo)
         {
-           
-            var conditions = new List<ScanCondition>
-            {
-                new ScanCondition("NumeroServicio", ScanOperator.Equal, codigo)
-            };
-            var ordenes = await _dynamoDbContext.ScanAsync<OrdenReparacion>(conditions).GetRemainingAsync();
+            var ordenes = await _dynamoDbContext
+                .QueryAsync<OrdenReparacion>(codigo, new QueryConfig { IndexName = "NumeroServicio-index" })
+                .GetRemainingAsync();
             var o = ordenes.FirstOrDefault();
 
             if (o == null) return null;
 
-            
             var equipo = await _dynamoDbContext.LoadAsync<Equipo>(o.IdEquipo);
             Marca? marca = null;
             TipoEquipo? tipoEquipo = null;
@@ -167,12 +160,9 @@ namespace Berum_WebAPI.Services
                 tecnico = await _dynamoDbContext.LoadAsync<Tecnico>(o.IdTecnico.Value);
             }
 
-           
-            var historyConditions = new List<ScanCondition>
-            {
-                new ScanCondition("IdOrden", ScanOperator.Equal, o.IdOrden)
-            };
-            var historiales = await _dynamoDbContext.ScanAsync<HistorialEstado>(historyConditions).GetRemainingAsync();
+            var historiales = await _dynamoDbContext
+                .QueryAsync<HistorialEstado>(o.IdOrden, new QueryConfig { IndexName = "IdOrden-Fecha-index" })
+                .GetRemainingAsync();
 
             var historialDtos = new List<HistorialEstadoDto>();
             foreach (var h in historiales.OrderBy(x => x.Fecha))

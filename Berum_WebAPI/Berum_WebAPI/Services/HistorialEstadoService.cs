@@ -32,18 +32,15 @@ namespace Berum_WebAPI.Services
             if (estado == null)
                 return (CreateHistorialResult.EstadoNoExiste, null);
 
+            var historialRows = await _dynamoDbContext
+                .QueryAsync<HistorialEstado>(dto.IdOrden, new QueryConfig { IndexName = "IdOrden-Fecha-index" })
+                .GetRemainingAsync();
             
-            var conditions = new List<ScanCondition>
-            {
-                new ScanCondition("IdOrden", ScanOperator.Equal, dto.IdOrden)
-            };
-            var historialRows = await _dynamoDbContext.ScanAsync<HistorialEstado>(conditions).GetRemainingAsync();
-            var ultimoEstado = historialRows.OrderByDescending(h => h.Fecha).FirstOrDefault();
+            var ultimoEstado = historialRows.LastOrDefault();
          
             if (ultimoEstado != null && ultimoEstado.IdEstado == dto.IdEstado && ultimoEstado.Observaciones == dto.Observaciones)
                 return (CreateHistorialResult.Duplicado, null);
 
-            
             int generatedId = (int)(DateTime.UtcNow.Ticks % int.MaxValue);
 
             var historialEstado = new HistorialEstado
@@ -55,7 +52,6 @@ namespace Berum_WebAPI.Services
                 Observaciones = dto.Observaciones
             };
 
-            
             await _dynamoDbContext.SaveAsync(historialEstado);
 
             orden.IdEstadoActual = dto.IdEstado;
