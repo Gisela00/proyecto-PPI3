@@ -1,17 +1,13 @@
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
 using Berum_WebAPI.Helpers;
 using Berum_WebAPI.Models;
 using Berum_WebAPI.Services;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using QuestPDF.Infrastructure;
 using Scalar.AspNetCore;
 using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Reflection;
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
-using Berum_WebAPI.Services;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,13 +88,12 @@ var app = builder.Build();
 app.UseCors("AllowReactApp");
 
 // Configure the HTTP request pipeline.
-
-    app.MapOpenApi();
-    app.MapScalarApiReference(
-        options =>
-        options.WithTitle(title: "RepairShop API")
-        .WithTheme(ScalarTheme.Saturn)
-        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.Http));
+app.MapOpenApi();
+app.MapScalarApiReference(
+    options =>
+    options.WithTitle(title: "RepairShop API")
+    .WithTheme(ScalarTheme.Saturn)
+    .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.Http));
 
 //app.UseHttpsRedirection();
 

@@ -11,7 +11,7 @@ namespace Berum_WebAPI.Services
 
         Task<ClienteDTO> Create(ClienteCreateDto dto);
 
-        Task<ClienteDTO> Update(int id, ClienteDTO dto);
+        Task<ClienteDTO?> Update(int id, ClienteDTO dto);
 
         Task<bool> Delete(int id);
     }
