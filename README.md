@@ -35,6 +35,12 @@
 * Persistencia: La API se comunica con Amazon DynamoDB mediante credenciales temporales basadas en roles IAM.
 * Optimización Operativa: Una función de AWS Lambda automatiza el ciclo de vida (encendido y apagado) de la instancia EC2 para la gestión de recursos.
 
+## Diagrama
+
+<p align="center">
+  <img src="Berum_Front/src/assets/arq-aws.drawio.png" alt="Diagrama de Arquitectura AWS" width="800" />
+</p>
+
 ## 2. Componentes de la Infraestructura
 
 | Capa | Servicio AWS | Implementación y Justificación |
